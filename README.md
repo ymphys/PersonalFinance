@@ -6,7 +6,7 @@
 
 - 支持支付宝、微信账单导入与合并
 - 自动数据清洗与格式统一
-- 基于 GPT 的账单分类与标签自动化
+- 基于 DeepSeek 的账单分类与标签自动化
 - 账单数据可视化与分析（可扩展）
 - 支持历史账单增量更新
 
@@ -47,17 +47,17 @@ mkdir -p Data/{Alipay,Wechat,update}
 #### 合并与清洗
 
 ```zsh
-uv run alipy_wechat_update.py
+uv run update.py
 uv run clean.py
 ```
 上述命令会将支付宝、微信账单与历史数据合并，并输出到 `./Data/update/alipay_wechat_uptodate.csv` 和 `./Data/update/cleaned.csv`。
 
-#### GPT 自动标签分类
+#### DeepSeek 自动标签分类
 
-1. 打开 `GPT_labeling.ipynb` Jupyter Notebook
-2. 依次运行所有单元格
-3. `clean.csv` 与 `cleaned_labeled.csv` 会合并，已标注的 `new_category` 会自动赋值，新增数据将自动调用 GPT 进行分类
-4. 最终结果输出到 `cleaned_labeled.csv`
+```zsh
+uv run label.py
+```
+`./Data/update`目录下存在`cleaned.csv`与`cleaned_labeling.csv`，程序会首先合并这两个文件，确保之前已经标注过的数据不再被发送并标注；采用了并发提高速度，默认并发次数为10次；采用了tqdm包显示标注进度；每标注100行数据会写入一次，最终标注完成的数据为`./Data/cleaned_labeled.csv`.
 
 ## 目录结构说明
 
@@ -67,10 +67,10 @@ PersonalFinance/
 │   ├── Alipay/
 │   ├── Wechat/
 │   └── update/
-├── alipy_wechat_update.py   # 支付宝、微信账单合并脚本
-├── clean.py                # 数据清洗脚本
-├── GPT_labeling.ipynb      # GPT 分类标签 Jupyter Notebook
-├── pyproject.toml          # Python 依赖配置
+├── update.py            # 支付宝、微信账单合并脚本
+├── clean.py             # 数据清洗脚本
+├── label.py             # DeepSeek 分类标签
+├── pyproject.toml       # Python 依赖配置
 └── README.md
 ```
 
@@ -84,8 +84,8 @@ PersonalFinance/
 
 ## TODO
 
-- 增加更多数据分析与可视化功能
-- 支持更多账单来源
+- 增加数据分析与可视化功能
+- 支持微信/支付宝数据定期自动获取
 - 优化 GPT 分类准确率与交互体验
 
 ## License
