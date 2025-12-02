@@ -4,13 +4,13 @@ import os
 def load_and_concat_csv(dir_path, skiprows, encoding=None):
     csv_files = [f for f in os.listdir(dir_path) if f.endswith('.csv')]
     df_list = [
-        pd.read_csv(os.path.join(dir_path, f), skiprows=skiprows, encoding=encoding) 
+        pd.read_csv(os.path.join(dir_path, f), skiprows=skiprows, encoding=encoding)
         for f in csv_files
     ]
     return pd.concat(df_list, ignore_index=True)
 
 def clean_and_export(
-    all_data, rename_dict, drop_cols, column_order, 
+    all_data, rename_dict, drop_cols, column_order,
     output_path, inout_map, amount_clean=False, add_account=False
 ):
     all_data = all_data.rename(columns=rename_dict)
@@ -84,11 +84,9 @@ def process_wechat():
 def concat_and_sort():
     alipay_path = 'Data/Alipay/alipay_uptodate.csv'
     wechat_path = 'Data/Wechat/wechat_uptodate.csv'
-    previous_path = 'Data/update/alipay_wechat_uptodate.csv'
     df_alipay = pd.read_csv(alipay_path)
     df_wechat = pd.read_csv(wechat_path)
-    df_previous = pd.read_csv(previous_path)
-    df = pd.concat([df_alipay, df_wechat, df_previous], ignore_index=True)
+    df = pd.concat([df_alipay, df_wechat], ignore_index=True)
     # 确保Date和Time为正确类型
     # df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.date
     # df['Time'] = pd.to_datetime(df['Time'], errors='coerce').dt.time
@@ -96,10 +94,16 @@ def concat_and_sort():
     df.drop_duplicates(inplace=True)
     df['in/out'] = pd.to_numeric(df['in/out'], errors='coerce').astype('Int64')
     df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce').astype('Float64')
-    df.to_csv('Data/update/alipay_wechat_uptodate.csv', index=False)
+    df.to_csv('Data/update/updated.csv', index=False)
     print("Alipay & Wechat data merged and saved.")
 
 if __name__ == "__main__":
     process_alipay()
     process_wechat()
     concat_and_sort()
+    try:
+        os.remove("Data/Alipay/alipay_uptodate.csv")
+        os.remove("Data/Wechat/wechat_uptodate.csv")
+        print("Temporary per-platform CSV files removed.")
+    except FileNotFoundError:
+        pass

@@ -62,10 +62,10 @@ def process_row(idx):
         return idx, None, e
 
 # 使用线程池并发处理，最大并发数设置为10（可根据API限制调整）
-max_workers = 10
+max_workers = 250
 with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
     futures = {executor.submit(process_row, idx): idx for idx in indices_to_process}
-    
+
     for i, future in enumerate(tqdm(concurrent.futures.as_completed(futures), total=len(futures))):
         idx = futures[future]
         try:

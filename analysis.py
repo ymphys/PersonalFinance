@@ -1,4 +1,5 @@
 import argparse
+import os
 from pathlib import Path
 from typing import Sequence
 import matplotlib.pyplot as plt
@@ -180,6 +181,13 @@ def plot_spending_trend(
     return path
 
 
+def plot_relative_link(plot_path: Path | None, markdown_dir: Path) -> str | None:
+    if plot_path is None:
+        return None
+    rel = os.path.relpath(plot_path, start=markdown_dir)
+    return Path(rel).as_posix()
+
+
 def build_summary_md(
     income: float,
     expenses: float,
@@ -192,6 +200,7 @@ def build_summary_md(
     cat_plot: Path | None,
     minor_plot: Path | None,
     trend_plot: Path | None,
+    markdown_dir: Path,
 ) -> str:
     lines = ["# 分析摘要", ""]
     lines.append(f"- 总收入：{income:,.2f} CNY")
@@ -209,7 +218,11 @@ def build_summary_md(
             f"- 投资收入总额：{investment_total:,.2f} CNY（最大子类：{top_invest}）"
         )
 
-    if cat_plot or minor_plot or trend_plot:
+    cat_link = plot_relative_link(cat_plot, markdown_dir)
+    minor_link = plot_relative_link(minor_plot, markdown_dir)
+    trend_link = plot_relative_link(trend_plot, markdown_dir)
+
+    if cat_link or minor_link or trend_link:
         lines.extend(["", "## 可视化图表", ""])
     if cat_plot:
         lines.append("### 子类支出分布")
@@ -217,7 +230,7 @@ def build_summary_md(
             "饼图展示本次分析中各子类支出所占比例，剔除低于2%的细分类以保持可读性。"
         )
         lines.append("")
-        lines.append(f"![按子类分布的支出]({cat_plot.as_posix()})")
+        lines.append(f"![按子类分布的支出]({cat_link})")
         lines.append("")
     if minor_plot:
         lines.append("### 低比例子类对比（<2%）")
@@ -225,13 +238,13 @@ def build_summary_md(
             "饼图突出展示占总支出比例低于2%的子类，百分比表示其相对于整体支出的占比，方便对比。"
         )
         lines.append("")
-        lines.append(f"![低比例子类]({minor_plot.as_posix()})")
+        lines.append(f"![低比例子类]({minor_link})")
         lines.append("")
     if trend_plot:
         lines.append("### 日度支出趋势")
         lines.append("折线图展示分析期间每日的累计支出变化。")
         lines.append("")
-        lines.append(f"![日度支出趋势]({trend_plot.as_posix()})")
+        lines.append(f"![日度支出趋势]({trend_link})")
         lines.append("")
 
     if not top_expenses_df.empty:
@@ -271,7 +284,7 @@ def main() -> None:
     parser.add_argument(
         "--plots-dir",
         type=Path,
-        default=Path("plots"),
+        default=Path("Analysis/plots"),
         help="Directory to store generated visuals.",
     )
     parser.add_argument(
@@ -299,6 +312,8 @@ def main() -> None:
     minor_plot = plot_minor_subcategories(positive_sub, positive_total, args.plots_dir, base_name)
     trend_plot = plot_spending_trend(daily, args.plots_dir, base_name)
 
+    summary_dir = Path("Analysis/markdown")
+    summary_dir.mkdir(parents=True, exist_ok=True)
     summary_text = build_summary_md(
         income,
         expenses,
@@ -311,9 +326,9 @@ def main() -> None:
         cat_plot,
         minor_plot,
         trend_plot,
+        summary_dir,
     )
-    print(summary_text)
-    summary_path = Path(f"{base_name}.md")
+    summary_path = summary_dir / f"{base_name}.md"
     summary_path.write_text(summary_text, encoding="utf-8")
     print(f"\nSummary written to `{summary_path}`")
 
