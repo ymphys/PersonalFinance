@@ -50,14 +50,34 @@ mkdir -p Data/{Alipay,Wechat,update}
 uv run update.py
 uv run clean.py
 ```
-上述命令会将支付宝、微信账单与历史数据合并，并输出到 `./Data/update/alipay_wechat_uptodate.csv` 和 `./Data/update/cleaned.csv`。
+上述命令会将支付宝、微信账单与历史数据合并，并输出到 `./Data/update/updated.csv` 和 `./Data/update/cleaned.csv`。
 
 #### DeepSeek 自动标签分类
 
 ```zsh
 uv run label.py
 ```
-`./Data/update`目录下存在`cleaned.csv`与`cleaned_labeling.csv`，程序会首先合并这两个文件，确保之前已经标注过的数据不再被发送并标注；采用了并发提高速度，默认并发次数为10次；采用了tqdm包显示标注进度；每标注100行数据会写入一次，最终标注完成的数据为`./Data/cleaned_labeled.csv`.
+`./Data`目录下存在`/update/cleaned.csv`与`cleaned_labeled.csv`，程序会首先合并这两个文件，确保之前已经标注过的数据不再被发送并标注；采用了并发提高速度，默认并发次数为10次；采用了tqdm包显示标注进度；每标注100行数据会写入一次，最终标注完成的数据为`./Data/cleaned_labeled.csv`.
+
+### 5. 数据分析与可视化
+
+`analysis.py` 提供了对已清洗账单（`Data/cleaned_labeled.csv`）的分析与可视化功能，默认会：
+
+1. 汇总收入、支出、净收入，并按类别与子类别统计支出明细。
+2. 生成子类别支出饼图（自动移除占比 <2% 的项并合并为「Other」）和低比例子类对比饼图，以及日度支出趋势折线图。
+3. 将图表保存在 `Analysis/plots/`，并将分析摘要写入 `Analysis/markdown/analysis.md`（可选指定区间时会生成 `analysis_{start}_{end}.md`）；
+4. 解决文件间路径问题，使 Markdown 中的图片链接均为相对路径。
+
+#### 运行方式
+
+```zsh
+uv run analysis.py Data/cleaned_labeled.csv
+```
+
+可选地加上 `--period START END`（格式如 `2025-01-01 2025-10-30`）只分析该时间段内的流水，脚本会自动筛选、命名输出文件，并打印中文的 Markdown 摘要。
+
+**依赖提示**：脚本需要 `matplotlib`，请保证该依赖已通过 `uv sync` 安装或 `pip install matplotlib`。
+
 
 ## 目录结构说明
 
@@ -84,7 +104,7 @@ PersonalFinance/
 
 ## TODO
 
-- 增加数据分析与可视化功能
+- 完善数据分析与可视化功能
 - 支持微信/支付宝数据定期自动获取
 - 优化 GPT 分类准确率与交互体验
 

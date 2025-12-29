@@ -4,7 +4,7 @@ from pathlib import Path
 
 # ================= 配置参数 =================
 # MERGE_PATH = 'Data/hand_made/merge.csv'
-UPDATE_PATH = 'Data/update/alipay_wechat_uptodate.csv'
+UPDATE_PATH = 'Data/update/updated.csv'
 OUTPUT_PATH = 'Data/update/cleaned.csv'
 
 # 预编译正则表达式

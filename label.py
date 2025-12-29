@@ -35,14 +35,17 @@ def row_to_prompt(row):
 
 # 0. 读取数据
 df = pd.read_csv('Data/update/cleaned.csv')
-df_labeled = pd.read_csv('Data/update/cleaned_labeling.csv')
+df_labeled = pd.read_csv('Data/cleaned_labeled.csv')
+df_labeled = df_labeled.drop_duplicates(subset=['Date', 'Time'])
 
 # 合并 Date 和 Time 以及 sub_category
-df = df.merge(
-    df_labeled[['Date', 'Time', 'sub_category']].rename(columns={'sub_category': 'sub_category_labeled'}),
-    on=['Date', 'Time'],
-    how='left'
+labeled_subset = (
+    df_labeled[['Date', 'Time', 'sub_category']]
+    .rename(columns={'sub_category': 'sub_category_labeled'})
+    .drop_duplicates(subset=['Date', 'Time'])
 )
+df = df.merge(labeled_subset, on=['Date', 'Time'], how='left')
+
 
 if 'sub_category' not in df.columns:
     df['sub_category'] = ''
@@ -82,3 +85,4 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
 
 print("Labeling completed.")
 df.to_csv('Data/cleaned_labeled.csv', index=False)
+pd.read_csv('Data/cleaned_labeled.csv').drop_duplicates().to_csv('Data/cleaned_labeled.csv', index=False)
